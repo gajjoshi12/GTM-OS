@@ -35,12 +35,12 @@ export function ContentPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phase 7 · Content Strategy → Social → LinkedIn → SEO" title={<>Inbound authority, <span className="gradient-text">compounding weekly</span></>}
-        description="A rolling calendar (Mon industry insight · Tue customer problem · Wed case study · Thu founder POV · Fri product insight) that reshuffles on performance. Publishing via official APIs only."
-        actions={<><Tabs tabs={[{ key: 'calendar', label: 'Calendar', count: items?.length }, { key: 'seo', label: 'SEO', count: kws?.length }]} value={tab} onChange={setTab} /><Button onClick={() => plan.mutate()} loading={plan.isPending}><Sparkles className="h-4 w-4" /> Plan next week</Button></>} />
+      <PageHeader title={<>Posts and <span className="gradient-text">articles</span></>}
+        description="A weekly plan of social posts and blog articles, written and scheduled for you. The AI reshuffles the plan based on what people actually read."
+        actions={<><Tabs tabs={[{ key: 'calendar', label: 'Plan', count: items?.length }, { key: 'seo', label: 'Search rankings', count: kws?.length }]} value={tab} onChange={setTab} /><Button onClick={() => plan.mutate()} loading={plan.isPending}><Sparkles className="h-4 w-4" /> Plan next week</Button></>} />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[['Published (3 wks)', num(published.length)], ['Impressions', num(totals.impressions)], ['Clicks', num(totals.clicks)], ['Content-sourced leads', num(totals.leads)]].map(([l, v]) => <div key={l} className="glass p-4"><div className="label">{l}</div><div className="mt-1 text-2xl font-bold text-white">{v}</div></div>)}
+        {[['Published', num(published.length)], ['Times seen', num(totals.impressions)], ['Clicks', num(totals.clicks)], ['Leads from content', num(totals.leads)]].map(([l, v]) => <div key={l} className="glass p-4"><div className="label">{l}</div><div className="mt-1 text-2xl font-bold text-white">{v}</div></div>)}
       </div>
 
       {tab === 'calendar' && (
@@ -69,9 +69,9 @@ export function ContentPage() {
       )}
 
       {tab === 'seo' && (
-        <Panel title="Keyword clusters & SERP monitoring" subtitle="SEO Agent · judged on non-brand organic leads" padded={false}>
+        <Panel title="What you rank for on Google" subtitle="Green means you moved up since the last check" padded={false}>
           <table className="w-full text-sm">
-            <thead><tr className="text-left text-[11px] uppercase tracking-wider text-[var(--text-muted)]"><th className="px-5 py-3">Keyword</th><th className="px-3 py-3">Cluster</th><th className="px-3 py-3">Intent</th><th className="px-3 py-3 text-right">Volume</th><th className="px-3 py-3 text-right">Difficulty</th><th className="px-3 py-3 text-right">Rank</th><th className="px-3 py-3 text-right">Δ</th></tr></thead>
+            <thead><tr className="text-left text-[11px] uppercase tracking-wider text-[var(--text-muted)]"><th className="px-5 py-3">Keyword</th><th className="px-3 py-3">Cluster</th><th className="px-3 py-3">Intent</th><th className="px-3 py-3 text-right">Searches/mo</th><th className="px-3 py-3 text-right">How hard</th><th className="px-3 py-3 text-right">Your position</th><th className="px-3 py-3 text-right">Δ</th></tr></thead>
             <tbody>{kws?.map((k) => { const d = k.previous_rank != null && k.current_rank != null ? k.previous_rank - k.current_rank : null; return (
               <tr key={k.id} className="border-t border-white/[0.05] hover:bg-white/[0.03]">
                 <td className="px-5 py-3 font-semibold text-white">{k.keyword}</td><td className="px-3 py-3 text-xs text-[var(--text-secondary)]">{k.cluster}</td><td className="px-3 py-3"><Badge tone={k.intent === 'commercial' ? 'accent' : 'neutral'}>{k.intent}</Badge></td>

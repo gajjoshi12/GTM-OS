@@ -38,6 +38,11 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", "dev-insecure-secret-key-change-me")
 DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1") + (["*"] if DEBUG else [])
 
+# Render (and most PaaS) inject the service hostname at runtime - trust it automatically.
+_RENDER_HOST = env("RENDER_EXTERNAL_HOSTNAME", "")
+if _RENDER_HOST and _RENDER_HOST not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_RENDER_HOST)
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -125,6 +130,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # --- CORS -------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
 CORS_ALLOW_CREDENTIALS = True
+
+# Behind Render/Heroku/Nginx the TLS terminates at the proxy; without this Django
+# thinks every request is plain HTTP and rejects admin/session POSTs as insecure.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "") + (
+    [f"https://{_RENDER_HOST}"] if _RENDER_HOST else []
+)
 CORS_ALLOW_HEADERS = [
     "accept", "authorization", "content-type", "origin", "x-csrftoken", "x-requested-with", "x-workspace",
 ]

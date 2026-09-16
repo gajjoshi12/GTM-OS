@@ -40,18 +40,22 @@ COLUMNS = [
 PROVIDERS: list[tuple] = [
 
     # ================================================================= P0 — AI core
-    ("P0", "AI Models", "Anthropic (Claude)",
+    ("P0", "AI Models", "Groq",
      "Every agent's reasoning: AI CMO, ICP, copy, replies, decisions",
-     "Required", "Instant", "5 minutes", "Email + card",
-     "Prepaid credits, per-token", 150,
-     "$5 trial credit", "https://console.anthropic.com/settings/keys",
-     "https://docs.anthropic.com",
-     "1) Sign up at console.anthropic.com. 2) Billing -> add payment method, buy credits ($50 is plenty to start). "
-     "3) API Keys -> Create Key -> copy once (shown only once). 4) Paste into ANTHROPIC_API_KEY in .env. "
-     "5) Restart Django; the sidebar badge flips from 'Simulation mode' to 'Claude live'. "
-     "6) Optional: set a monthly spend limit under Billing -> Limits.",
-     "ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_WORKER_MODEL",
-     "Set a spend limit before you let agents run on a schedule. Workspace-scoped keys let you separate dev/prod."),
+     "Required", "Instant", "5 minutes", "Email (free tier needs no card)",
+     "Free tier, then pay-per-token", 25,
+     "Yes - free tier, rate-limited", "https://console.groq.com/keys",
+     "https://console.groq.com/docs",
+     "1) Sign up at console.groq.com (Google/GitHub login works). 2) API Keys -> Create API Key -> copy it "
+     "(shown once). 3) Paste into GROQ_API_KEY in .env. 4) Check which models your key can use: "
+     "curl https://api.groq.com/openai/v1/models -H \"Authorization: Bearer $GROQ_API_KEY\" "
+     "5) Set GROQ_MODEL (reasoning) and GROQ_WORKER_MODEL (bulk/cheap) to IDs from that list. "
+     "6) Restart Django - the sidebar badge flips from 'Demo data' to 'AI is live'. "
+     "7) For production volume, add billing in the console to lift the free-tier rate limits.",
+     "GROQ_API_KEY, GROQ_MODEL, GROQ_WORKER_MODEL, LLM_PROVIDER",
+     "THE FREE TIER IS RATE-LIMITED (requests and tokens per minute) - fine for testing, but running all 38 agents "
+     "will hit it. The client retries with backoff (GROQ_MAX_RETRIES), but add billing before scheduling agent runs. "
+     "Model IDs change: verify against the /models endpoint rather than trusting a hardcoded name."),
 
     # ================================================================= P1 — the wedge
     ("P1", "Prospecting", "Apollo.io",
@@ -799,15 +803,30 @@ PROVIDERS: list[tuple] = [
      "VWO_ACCOUNT_ID, VWO_API_TOKEN",
      "The CRO Agent can run experiments natively on generated pages — only buy VWO for pages you don't control."),
 
+    ("P4", "AI Models", "Anthropic (Claude)",
+     "Alternative LLM for every agent (set LLM_PROVIDER=anthropic)",
+     "Alternative", "Instant", "5 minutes", "Email + card",
+     "Prepaid credits, per-token", 150,
+     "$5 trial credit", "https://console.anthropic.com/settings/keys",
+     "https://docs.anthropic.com",
+     "1) pip install anthropic. 2) Sign up at console.anthropic.com, add a payment method and buy credits. "
+     "3) API Keys -> Create Key -> copy once. 4) Set ANTHROPIC_API_KEY and LLM_PROVIDER=anthropic. "
+     "5) Set a monthly spend limit under Billing -> Limits.",
+     "ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_WORKER_MODEL, LLM_PROVIDER",
+     "Stronger reasoning than the Groq models but roughly 5-10x the cost and much slower per response. "
+     "Worth testing if agent output quality is the bottleneck. Pick ONE LLM provider."),
+
     ("P4", "AI Models", "OpenAI",
-     "Optional secondary model / embeddings",
-     "Optional", "Instant", "5 minutes", "Card",
+     "Alternative LLM / embeddings (set LLM_PROVIDER=openai)",
+     "Alternative", "Instant", "5 minutes", "Card",
      "Per-token", 20,
      "None (prepaid)", "https://platform.openai.com/api-keys",
      "https://platform.openai.com/docs",
-     "1) Sign up -> Billing -> add credits. 2) API Keys -> create. 3) Paste into OPENAI_API_KEY.",
-     "OPENAI_API_KEY",
-     "Not required — every agent runs on Claude. Only add if you specifically want a second provider for embeddings."),
+     "1) pip install openai. 2) Sign up -> Billing -> add credits. 3) API Keys -> create. "
+     "4) Set OPENAI_API_KEY and LLM_PROVIDER=openai. OPENAI_BASE_URL also lets you point at any "
+     "OpenAI-compatible gateway (Together, OpenRouter, a local vLLM server).",
+     "OPENAI_API_KEY, OPENAI_MODEL, OPENAI_WORKER_MODEL, OPENAI_BASE_URL, LLM_PROVIDER",
+     "Not required - the agents run on Groq by default. Pick ONE LLM provider."),
 
     ("P4", "Creative Generation", "Stability AI",
      "Creative Director: image generation",

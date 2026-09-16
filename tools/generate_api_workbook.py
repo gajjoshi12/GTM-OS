@@ -107,7 +107,7 @@ def sheet_start_here(wb):
         ("4. LinkedIn Marketing API", "2–8 weeks and genuinely uncertain. Apply early; assume it may not land."),
         ("", ""),
         ("PHASE LEGEND", ""),
-        ("P0 — Day 1", "Anthropic only. ~$50 of credits and every one of the 38 agents starts reasoning for real."),
+        ("P0 — Day 1", "A Groq API key. Free tier works for testing; every one of the 38 agents starts reasoning for real."),
         ("P1 — Week 1", "The wedge: Apollo + verifier + Instantly (outbound) · Google Ads (paid) · HubSpot (CRM) · Stripe + GA4 (revenue truth). "
                         "This is a complete, working revenue loop."),
         ("P2 — Week 2–4", "Second channel + research: Meta Ads, Firecrawl, Tavily, SerpApi, Search Console, Resend, Gmail, Cal.com."),
@@ -118,7 +118,7 @@ def sheet_start_here(wb):
                                          "one email verifier, one SEO suite, one analytics tool. Do not buy the whole column."),
         ("", ""),
         ("MINIMUM VIABLE SPEND", "≈ $375/month of software gets the entire P0 + P1 loop running live on real data — "
-                                 "Claude, Apollo, a verifier, Instantly, HubSpot, Stripe, GA4 and Google Ads. "
+                                 "Groq, Apollo, a verifier, Instantly, HubSpot, Stripe, GA4 and Google Ads. "
                                  "The ad budget itself is separate and will be the larger number. See the Cost Model sheet."),
         ("", ""),
         ("WHERE THE KEYS GO", "Either paste them into the repo-root .env file (see '.env Key Map'), or enter them in the app at "
@@ -282,7 +282,7 @@ def sheet_plan(wb, master_rows):
         ("Day 1 (afternoon)", "Create the Google Ads Manager (MCC) account and apply for the developer token. "
                               "Create the Meta Business Account and start Business Verification.",
          "Both are review queues measured in days-to-weeks. Get in the queue before you need them."),
-        ("Day 1 (evening)", "Anthropic key + $50 of credits. Generate CREDENTIALS_ENCRYPTION_KEY. "
+        ("Day 1 (evening)", "Groq API key (free tier is fine to start). Generate CREDENTIALS_ENCRYPTION_KEY. "
                             "Set spend caps in Settings → Control & guardrails.",
          "Five minutes and all 38 agents stop simulating and start reasoning on your real business."),
         ("Day 2–3", "Apollo (paid tier for API) + one email verifier + HubSpot private app + Stripe test keys.",
@@ -373,9 +373,9 @@ def sheet_cost(wb, master_rows):
     scenarios = [
         ("Demo / simulation", "Nothing. Every provider blank.", 0,
          "The full product is usable and demoable — agents produce deterministic simulated output."),
-        ("P0 — agents thinking", "Anthropic only", None,
-         "≈$50 of credits goes a long way at this volume. Set a spend limit in the Anthropic console."),
-        ("P0+P1 — the wedge live", "Anthropic, Apollo, verifier, Instantly, HubSpot, Stripe, GA4, Google Ads, Slack", None,
+        ("P0 — agents thinking", "Groq only", None,
+         "The free tier covers testing. Add billing before you schedule agents — the free rate limits will throttle 38 of them."),
+        ("P0+P1 — the wedge live", "Groq, Apollo, verifier, Instantly, HubSpot, Stripe, GA4, Google Ads, Slack", None,
          "MINIMUM VIABLE REAL SYSTEM. Complete revenue loop on real data. Add your ad budget on top."),
         ("+ P2 — second channel", "Meta Ads, Firecrawl, Tavily, SerpApi, GSC, Resend, Gmail, Cal.com", None,
          "Two paid channels, real research, lifecycle email."),
@@ -428,8 +428,8 @@ def sheet_cost(wb, master_rows):
     r += 1
     for note in [
         "Ad spend is NOT in these numbers. Budget it separately — it will dwarf the software cost.",
-        "Claude usage scales with how often agents run. Start agents manually or daily, not hourly. "
-        "Use the worker model (claude-sonnet-5) for bulk personalisation — it's already wired in ANTHROPIC_WORKER_MODEL.",
+        "LLM usage scales with how often agents run. Start agents manually or daily, not hourly. "
+        "Bulk work (10k personalised emails, reply classification) already routes to the cheaper GROQ_WORKER_MODEL.",
         "Apollo/ZoomInfo cost is driven by enrichment CREDITS, not seats. Verify before sending to avoid burning credits on bad data.",
         "Semrush and Ahrefs gate their APIs behind top-tier plans (~$500/mo each). SerpApi + Search Console cover "
         "most of the same ground for under $100.",
@@ -503,6 +503,13 @@ def sheet_env_map(wb):
         "HOTJAR_SITE_ID": "Hotjar (optional heatmaps)",
         "MICROSOFT_CLARITY_PROJECT_ID": "Microsoft Clarity (free heatmaps)",
         "GOOGLE_SERVICE_ACCOUNT_JSON": "Google Cloud service account (inline JSON)",
+        "LLM_PROVIDER": "You choose: groq | anthropic | openai",
+        "GROQ_BASE_URL": "Groq (tuning, leave blank)",
+        "GROQ_TEMPERATURE": "Groq (tuning)",
+        "GROQ_MAX_RETRIES": "Groq (tuning - raise on free tier)",
+        "GROQ_TIMEOUT": "Groq (tuning)",
+        "GROQ_SEND_REASONING_EFFORT": "Groq (tuning - model dependent)",
+        "OPENAI_BASE_URL": "OpenAI-compatible gateway (optional)",
     })
 
     ws.append([])

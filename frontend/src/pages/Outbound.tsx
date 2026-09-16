@@ -31,12 +31,12 @@ export function OutboundPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phases 5–6 · Personalization → Outbound → Reply Intelligence → AI SDR" title={<>Outbound that reads like <span className="gradient-text">a human who did the research</span></>}
-        description="Prospects → intelligence cards → hyper-personalized copy → AI QA → verification → adaptive cadences → throttled sends → classified replies → AI SDR books the meeting."
-        actions={<><Tabs tabs={[{ key: 'sequences', label: 'Sequences', count: seqs?.length }, { key: 'inbox', label: 'Reply inbox', count: breakdown?.unhandled }]} value={tab} onChange={setTab} /><Button onClick={() => generate.mutate()} loading={generate.isPending}><Sparkles className="h-4 w-4" /> Generate sequence</Button></>} />
+      <PageHeader title={<>Cold <span className="gradient-text">email</span></>}
+        description="The AI researches each person, writes them a genuinely personal email, checks it, sends slowly so you are not flagged as spam, then reads every reply and drafts the answer."
+        actions={<><Tabs tabs={[{ key: 'sequences', label: 'Email sequences', count: seqs?.length }, { key: 'inbox', label: 'Replies', count: breakdown?.unhandled }]} value={tab} onChange={setTab} /><Button onClick={() => generate.mutate()} loading={generate.isPending}><Sparkles className="h-4 w-4" /> Write a new sequence</Button></>} />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-        {[['Enrolled', num(stats?.enrolled)], ['Sent', num(stats?.sent)], ['Open rate', stats && stats.sent ? `${Math.round((stats.opened / stats.sent) * 100)}%` : '—'], ['Reply rate', `${stats?.reply_rate ?? 0}%`], ['Positive rate', `${stats?.positive_rate ?? 0}%`], ['Meetings', num(stats?.meetings)], ['Bounce rate', `${stats?.bounce_rate ?? 0}%`]].map(([l, v]) => (
+        {[['People in sequences', num(stats?.enrolled)], ['Emails sent', num(stats?.sent)], ['Opened', stats && stats.sent ? `${Math.round((stats.opened / stats.sent) * 100)}%` : '—'], ['Replied', `${stats?.reply_rate ?? 0}%`], ['Interested', `${stats?.positive_rate ?? 0}%`], ['Meetings booked', num(stats?.meetings)], ['Bounced', `${stats?.bounce_rate ?? 0}%`]].map(([l, v]) => (
           <div key={l} className="glass p-4"><div className="label">{l}</div><div className="mt-1 text-2xl font-bold text-white">{v}</div></div>
         ))}
       </div>
@@ -81,19 +81,19 @@ export function OutboundPage() {
       {tab === 'inbox' && (
         <div className="grid gap-4 xl:grid-cols-[1fr_300px]">
           <div className="space-y-2">
-            <div className="flex items-center justify-between"><Tabs tabs={[{ key: 'unhandled', label: 'Needs action', count: breakdown?.unhandled }, { key: 'all', label: 'All', count: breakdown?.total }]} value={filter} onChange={setFilter} /><span className="text-xs text-[var(--text-muted)]">{breakdown?.meetings} meetings booked by AI SDR</span></div>
+            <div className="flex items-center justify-between"><Tabs tabs={[{ key: 'unhandled', label: 'Needs a reply', count: breakdown?.unhandled }, { key: 'all', label: 'All replies', count: breakdown?.total }]} value={filter} onChange={setFilter} /><span className="text-xs text-[var(--text-muted)]">{breakdown?.meetings} meetings booked by the AI</span></div>
             {replies?.results.map((r, i) => (
               <motion.div key={r.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="glass p-4">
                 <div className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold text-white">{r.contact_name}</span><span className="text-xs text-[var(--text-muted)]">{r.contact_title} · {r.company_name}</span>{r.company_tier === 1 && <Badge tone="accent">Tier 1</Badge>}<span className="ml-auto text-[11px] text-[var(--text-muted)]">{relTime(r.received_at)}</span></div>
                 <p className="mt-2 rounded-xl bg-ink-900/60 p-3 text-sm italic text-[var(--text-secondary)]">“{r.body}”</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2"><Badge tone={CLASS_TONE[r.classification] ?? 'neutral'} dot>{title(r.classification)}</Badge><span className="text-[11px] text-[var(--text-muted)]">{Math.round(r.confidence * 100)}% · Reply Intelligence</span><span className="text-xs text-white">→ {r.next_action}</span>{r.meeting_booked_at && <Badge tone="good">Meeting booked</Badge>}</div>
-                {r.sdr_response && <div className="mt-3 rounded-xl border border-accent/20 bg-accent/5 p-3 text-xs"><div className="label mb-1 !text-accent-soft">AI SDR drafted</div><span className="text-white">{r.sdr_response}</span></div>}
+                {r.sdr_response && <div className="mt-3 rounded-xl border border-accent/20 bg-accent/5 p-3 text-xs"><div className="label mb-1 !text-accent-soft">The AI drafted this reply</div><span className="text-white">{r.sdr_response}</span></div>}
                 {!r.handled && <div className="mt-3 flex gap-2"><Button size="sm" variant="success" onClick={() => handle.mutate(r.id)}>Approve & send</Button><Button size="sm" variant="ghost">Edit</Button></div>}
               </motion.div>
             ))}
             {replies && replies.results.length === 0 && <div className="glass p-10 text-center text-sm text-[var(--text-muted)]"><Inbox className="mx-auto mb-2 h-6 w-6" />Inbox zero.</div>}
           </div>
-          <Panel title="Classification mix" subtitle="Every reply, routed">
+          <Panel title="What people said" subtitle="Every reply, sorted by what it means">
             <div className="space-y-2">{breakdown?.by_class.map((b) => <div key={b.classification}><div className="mb-1 flex justify-between text-xs"><span className="text-white">{title(b.classification)}</span><span className="num text-[var(--text-muted)]">{b.count}</span></div><Meter value={b.count} max={Math.max(...breakdown.by_class.map((x) => x.count))} height={4} color={`var(--status-${CLASS_TONE[b.classification] === 'good' ? 'good' : CLASS_TONE[b.classification] === 'bad' ? 'critical' : 'warning'})`} /></div>)}</div>
           </Panel>
         </div>

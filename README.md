@@ -20,12 +20,12 @@ Understand → Strategize → Find customers → Create → Launch → Sell → 
 | Layer | Tech |
 |---|---|
 | Backend | Django 5 · Django REST Framework · SimpleJWT · Celery (optional) · SQLite by default / Postgres via `DATABASE_URL` |
-| AI | Anthropic SDK · `claude-opus-5` (adaptive thinking, server-side refusal fallbacks) · `claude-sonnet-5` as bulk worker |
+| AI | **Groq** (default) · `llama-3.3-70b-versatile` for reasoning, `llama-3.1-8b-instant` as bulk worker · swappable to Anthropic or OpenAI with one env var |
 | Frontend | React 18 · Vite · TypeScript · Tailwind · Framer Motion · Recharts · TanStack Query · Zustand |
 | Connectors | 60+ providers (Meta, Google Ads, LinkedIn, TikTok, Apollo, HubSpot, Instantly, Stripe, GA4, Semrush, …) |
 
 Every agent runs in **simulation mode** when its keys are blank, so the whole system is demoable
-with zero credentials. Add `ANTHROPIC_API_KEY` and agents switch to live reasoning.
+with zero credentials. Add `GROQ_API_KEY` and agents switch to live reasoning.
 
 ---
 
@@ -69,7 +69,7 @@ docker compose up --build       # web :5173 · api :8000 · postgres · redis ·
 
 ```
 config/            settings (reads repo-root .env), urls, celery
-ai/client.py       Anthropic wrapper: opus-5 + adaptive thinking + fallbacks; simulation when no key
+ai/client.py       LLM layer: Groq / Anthropic / OpenAI behind one interface; simulation when no key
 apps/
   accounts/        email-login users, workspaces (tenants), memberships, JWT
   core/            BusinessProfile (founder brief + derived plan), ControlSettings (3 modes + guardrails), BrandGuidelines
@@ -126,9 +126,9 @@ Press **⌘K / Ctrl+K** anywhere to open the command bar:
 ## Environment / API keys
 
 **Start with [`AI-GTM-OS-API-Acquisition.xlsx`](AI-GTM-OS-API-Acquisition.xlsx)** — the working tracker for getting
-every key: 67 providers with difficulty, lead time, indicative cost, step-by-step signup instructions, gotchas and a
+every key: 68 providers with difficulty, lead time, indicative cost, step-by-step signup instructions, gotchas and a
 status dropdown, plus a 30-day plan, the non-API prerequisites that gate everything, a cost model and a map of all
-193 `.env` variables to the provider that fills them.
+204 `.env` variables to the provider that fills them.
 
 Regenerate it after editing the catalogue:
 
@@ -139,7 +139,7 @@ backend/.venv/Scripts/python tools/generate_api_workbook.py    # data lives in t
 All keys live in the repo-root `.env` — see **`.env.example`** for the full draft, grouped by:
 
 1. Core platform (Django, DB, Redis, JWT, credential encryption)
-2. AI / LLM providers (Anthropic primary; embeddings, vector store, image/video/voice generation)
+2. AI / LLM provider (Groq primary, Anthropic + OpenAI optional; embeddings, vector store, image/video/voice generation)
 3. Paid media — Meta Ads, Google Ads, LinkedIn, TikTok, X
 4. Organic social — YouTube, TikTok content, Ayrshare/Buffer
 5. Prospecting & enrichment (waterfall order) — Apollo, Clearbit, PDL, Hunter, ZoomInfo, Crunchbase, BuiltWith + email verification
@@ -163,7 +163,7 @@ and lets you paste credentials instead (encrypted with `CREDENTIALS_ENCRYPTION_K
 `apps/agents/orchestrator.py`
 
 - `run_agent(workspace, key, payload)` — builds the agent's system prompt from `registry.py` + the
-  workspace's business context + brand rules, calls Claude (JSON contract: `summary`, `findings`,
+  workspace's business context + brand rules, calls the LLM (JSON contract: `summary`, `findings`,
   `decisions`, `artifacts`) and materialises decision cards. Without an API key it uses
   `simulations.py` (deterministic, anchored to the business profile).
 - `interpret_command(...)` — the command bar: AI CMO picks intent + agent sequence (rule-based fallback), runs them, returns a founder-facing response.
@@ -177,7 +177,7 @@ With `REDIS_URL` set, agent jobs can be dispatched to the Celery worker; without
 
 ## Next steps to go live
 
-1. Set `ANTHROPIC_API_KEY` → agents reason for real.
+1. Set `GROQ_API_KEY` → agents reason for real. (Swap vendors any time with `LLM_PROVIDER=anthropic|openai`.)
 2. Connect one channel pair first (spec's advice): **Apollo + Instantly** (outbound) and **Google Ads** (paid).
 3. Wire the write-side adapter methods in `apps/integrations/providers/adapters.py` (create campaign, push sequence, sync CRM) — read-side pings are already there.
 4. Point `DATABASE_URL` at Postgres and `REDIS_URL` at Redis for background runs.

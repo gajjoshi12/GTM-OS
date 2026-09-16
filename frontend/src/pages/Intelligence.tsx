@@ -79,15 +79,15 @@ export function IntelligencePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phase 1 · Intelligence" title={<>Business, market & <span className="gradient-text">competitor intelligence</span></>}
-        description="A living knowledge graph every agent queries instead of re-deriving context — plus continuous external signal watching."
-        actions={<><Tabs tabs={[{ key: 'graph', label: 'Knowledge graph', count: graph?.nodes.length }, { key: 'competitors', label: 'Competitor map', count: comps?.length }, { key: 'signals', label: 'Market signals', count: signals?.count }]} value={tab} onChange={setTab} />
-          <Button variant="outline" onClick={() => refresh.mutate()} loading={refresh.isPending}><RefreshCw className="h-4 w-4" /> Refresh intelligence</Button></>} />
+      <PageHeader title={<>What the AI <span className="gradient-text">knows</span></>}
+        description="Everything the system has learned about your business, your market and your competitors. Every other agent works from this, so it never has to guess or ask you twice."
+        actions={<><Tabs tabs={[{ key: 'graph', label: 'Your business', count: graph?.nodes.length }, { key: 'competitors', label: 'Competitors', count: comps?.length }, { key: 'signals', label: 'News & signals', count: signals?.count }]} value={tab} onChange={setTab} />
+          <Button variant="outline" onClick={() => refresh.mutate()} loading={refresh.isPending}><RefreshCw className="h-4 w-4" /> Re-read everything</Button></>} />
 
       {tab === 'graph' && graph && (
         <div className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
-          <Panel title="Business Knowledge Graph" subtitle="Hover a node to see its relations" action={<Brain className="h-4 w-4 text-accent-soft" />}><KnowledgeGraph g={graph} /></Panel>
-          <Panel title="Coverage by entity type" subtitle="Business Intelligence Agent · judged on coverage & freshness">
+          <Panel title="Your business, mapped" subtitle="Hover any dot to see what connects to it" action={<Brain className="h-4 w-4 text-accent-soft" />}><KnowledgeGraph g={graph} /></Panel>
+          <Panel title="How much we know" subtitle="Longer bars mean fewer questions the AI has to ask you">
             <div className="space-y-3">
               {graph.coverage.map((c) => (
                 <div key={c.kind}><div className="mb-1 flex items-center justify-between text-xs"><span className="flex items-center gap-2 text-white"><span className="h-2 w-2 rounded-full" style={{ background: KIND_COLOR[c.kind] }} />{title(c.kind)}</span><span className="num text-[var(--text-muted)]">{c.count}</span></div><Meter value={c.count} max={Math.max(...graph.coverage.map((x) => x.count))} color={KIND_COLOR[c.kind]} height={4} /></div>

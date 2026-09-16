@@ -40,7 +40,9 @@ class CompanyViewSet(WorkspaceScopedMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
-        qs = self.get_queryset()
+        # Deliberately NOT self.get_queryset(): that carries an annotate(Count("contacts"))
+        # whose JOIN would multiply the per-tier counts by each company's contact count.
+        qs = Company.objects.filter(workspace=self.get_workspace())
         return Response({
             "total": qs.count(),
             "by_tier": {str(r["tier"]): r["c"] for r in qs.values("tier").annotate(c=Count("id"))},

@@ -22,9 +22,9 @@ export function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Agent orchestration" title={<>One AI CMO. <span className="gradient-text">{total} specialists.</span></>}
-        description="The AI CMO owns the customer relationship end-to-end; every specialist reports upward. Run one agent, or trigger the full closed-loop pass."
-        actions={<Button onClick={() => runAll.mutate()} loading={runAll.isPending}><Zap className="h-4 w-4" /> Run closed-loop pass</Button>} />
+      <PageHeader title={<>Your AI <span className="gradient-text">marketing team</span></>}
+        description={`One manager and ${total} specialists. Each has a single job and reports to the manager. Open any of them to see exactly what they did and why.`}
+        actions={<Button onClick={() => runAll.mutate()} loading={runAll.isPending}><Zap className="h-4 w-4" /> Run the whole team</Button>} />
 
       {org?.cmo && (
         <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} onClick={() => setSelected(org.cmo)}
@@ -73,7 +73,7 @@ export function AgentsPage() {
       <Modal open={!!selected} onClose={() => setSelected(null)} width="max-w-3xl" title={selected && (
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent/60 to-accent-cyan/60"><Bot className="h-5 w-5 text-white" /></div>
-          <div><div className="text-base font-bold text-white">{selected.name}</div><div className="text-xs font-normal text-[var(--text-muted)]">{selected.group_label} · judged on {selected.judged_on}</div></div>
+          <div><div className="text-base font-bold text-white">{selected.name}</div><div className="text-xs font-normal text-[var(--text-muted)]">{selected.group_label} · measured on {selected.judged_on}</div></div>
           <Badge tone={statusTone(selected.status)} dot className="ml-auto">{selected.status}</Badge>
         </div>
       )}>
@@ -81,12 +81,12 @@ export function AgentsPage() {
           <div className="space-y-4">
             <p className="text-sm text-[var(--text-secondary)]">{selected.description}</p>
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"><div className="label">Runs</div><div className="text-xl font-bold text-white">{selected.runs_count}</div></div>
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"><div className="label">Success</div><div className="text-xl font-bold text-white">{Math.round(selected.success_rate * 100)}%</div></div>
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"><div className="label">Times run</div><div className="text-xl font-bold text-white">{selected.runs_count}</div></div>
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"><div className="label">Worked</div><div className="text-xl font-bold text-white">{Math.round(selected.success_rate * 100)}%</div></div>
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"><div className="label">Last run</div><div className="text-xl font-bold text-white">{relTime(selected.last_run_at)}</div></div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => runOne.mutate(selected.id)} loading={runOne.isPending}><Play className="h-4 w-4" /> Run now</Button>
+              <Button onClick={() => runOne.mutate(selected.id)} loading={runOne.isPending}><Play className="h-4 w-4" /> Run this agent</Button>
               <Button variant="outline" onClick={() => qc.invalidateQueries({ queryKey: ['runs'] })}><RefreshCw className="h-4 w-4" /> Refresh</Button>
             </div>
             <div className="max-h-[42vh] space-y-2 overflow-y-auto pr-1">
@@ -98,12 +98,12 @@ export function AgentsPage() {
                     <span className="font-mono text-[10px] text-[var(--text-muted)]">{r.mode} · {(r.duration_ms / 1000).toFixed(1)}s · {relTime(r.created_at)}</span>
                   </summary>
                   <div className="space-y-3 border-t border-white/[0.05] px-3 py-3 text-xs">
-                    {r.output?.findings?.length ? <div><div className="label mb-1">Findings</div><ul className="list-disc space-y-0.5 pl-4 text-[var(--text-secondary)]">{r.output.findings.map((f, i) => <li key={i}>{f}</li>)}</ul></div> : null}
-                    <div><div className="label mb-1">Log</div><div className="rounded-lg bg-ink-950/70 p-2 font-mono text-[11px] text-[var(--text-secondary)]">{r.log.map((l, i) => <div key={i}><span className="text-accent-soft">[{l.t}]</span> {l.msg}</div>)}</div></div>
+                    {r.output?.findings?.length ? <div><div className="label mb-1">What it found</div><ul className="list-disc space-y-0.5 pl-4 text-[var(--text-secondary)]">{r.output.findings.map((f, i) => <li key={i}>{f}</li>)}</ul></div> : null}
+                    <div><div className="label mb-1">Step by step</div><div className="rounded-lg bg-ink-950/70 p-2 font-mono text-[11px] text-[var(--text-secondary)]">{r.log.map((l, i) => <div key={i}><span className="text-accent-soft">[{l.t}]</span> {l.msg}</div>)}</div></div>
                   </div>
                 </details>
               ))}
-              {runs && runs.results.length === 0 && <div className="py-6 text-center text-xs text-[var(--text-muted)]">No runs yet — press Run now.</div>}
+              {runs && runs.results.length === 0 && <div className="py-6 text-center text-xs text-[var(--text-muted)]">Has not run yet — press the button above.</div>}
             </div>
           </div>
         )}

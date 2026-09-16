@@ -30,14 +30,14 @@ export function CampaignsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phases 8–9 · Paid Media → Creative → Testing → Autonomous Media Buyer" title={<>Every rupee goes where <span className="gradient-text">revenue says it should</span></>}
-        description="Campaigns across Meta, Google, YouTube, LinkedIn and TikTok. Creative Director briefs → Video Agent variants → statistical winners → budget reallocated on CAC, ROAS, LTV and margin, not clicks."
-        actions={<><Tabs tabs={[{ key: 'campaigns', label: 'Campaigns', count: camps?.length }, { key: 'creatives', label: 'Creative lab', count: creatives?.length }, { key: 'buyer', label: 'Media buyer log', count: allocs?.length }]} value={tab} onChange={setTab} /><Button variant="outline" onClick={() => genCreative.mutate()} loading={genCreative.isPending}><Image className="h-4 w-4" /> Generate creative</Button><Button onClick={() => optimize.mutate()} loading={optimize.isPending}><Sparkles className="h-4 w-4" /> Optimize now</Button></>} />
+      <PageHeader title={<>Your <span className="gradient-text">ads</span></>}
+        description="Campaigns on Google, Meta, LinkedIn and more. The AI writes the ads, tests versions against each other, and shifts budget towards whatever brings in customers most cheaply."
+        actions={<><Tabs tabs={[{ key: 'campaigns', label: 'Campaigns', count: camps?.length }, { key: 'creatives', label: 'Ad designs', count: creatives?.length }, { key: 'buyer', label: 'Budget changes', count: allocs?.length }]} value={tab} onChange={setTab} /><Button variant="outline" onClick={() => genCreative.mutate()} loading={genCreative.isPending}><Image className="h-4 w-4" /> Make new ads</Button><Button onClick={() => optimize.mutate()} loading={optimize.isPending}><Sparkles className="h-4 w-4" /> Rebalance budget</Button></>} />
 
       <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-        <Panel title="Channel scorecard" subtitle="Sorted by CAC — the Media Buyer's decision input">
+        <Panel title="How each channel is doing" subtitle="Cheapest way to win a customer, first">
           <table className="w-full text-xs">
-            <thead><tr className="text-left text-[10px] uppercase tracking-wider text-[var(--text-muted)]"><th className="py-2">Channel</th><th className="py-2 text-right">Spend</th><th className="py-2 text-right">Leads</th><th className="py-2 text-right">CAC</th><th className="py-2 text-right">ROAS</th><th className="py-2 text-right">Pipeline</th></tr></thead>
+            <thead><tr className="text-left text-[10px] uppercase tracking-wider text-[var(--text-muted)]"><th className="py-2">Channel</th><th className="py-2 text-right">Spend</th><th className="py-2 text-right">Leads</th><th className="py-2 text-right">Per customer</th><th className="py-2 text-right">Return</th><th className="py-2 text-right">In progress</th></tr></thead>
             <tbody>{channels?.map((c) => (
               <tr key={c.channel} className="border-t border-white/[0.05]">
                 <td className="py-2.5"><span className="flex items-center gap-2 font-semibold text-white"><span className="h-2 w-2 rounded-full" style={{ background: channelColor(c.channel) }} />{c.label}</span></td>
@@ -49,7 +49,7 @@ export function CampaignsPage() {
               </tr>))}</tbody>
           </table>
         </Panel>
-        <Panel title="Cost per lead by channel" subtitle="Lower is better"><ChannelBars data={(channels ?? []).map((c) => ({ channel: c.channel, cpl: c.leads ? Math.round(c.spend / c.leads) : 0 }))} metric="cpl" currency="INR" label="CPL" height={230} /></Panel>
+        <Panel title="Cost per lead" subtitle="Lower is better"><ChannelBars data={(channels ?? []).map((c) => ({ channel: c.channel, cpl: c.leads ? Math.round(c.spend / c.leads) : 0 }))} metric="cpl" currency="INR" label="CPL" height={230} /></Panel>
       </div>
 
       {tab === 'campaigns' && (
@@ -58,9 +58,9 @@ export function CampaignsPage() {
             <motion.div key={c.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="glass p-5">
               <div className="flex items-start justify-between gap-2"><div><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: channelColor(c.channel) }} /><span className="label">{channelLabel(c.channel)}</span></div><h3 className="mt-1 text-sm font-bold text-white">{c.name}</h3><div className="text-[11px] text-[var(--text-muted)]">{c.external_id} · LP: {c.landing_page_name || '—'}</div></div><Badge tone={statusTone(c.status)} dot>{c.status.replace('_', ' ')}</Badge></div>
               <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-base font-bold text-white">{money(c.daily_budget, 'INR', 0)}</div><div className="text-[10px] text-[var(--text-muted)]">daily budget</div></div>
-                <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-base font-bold text-white">{c.cac ? money(c.cac, 'INR', 0) : '—'}</div><div className="text-[10px] text-[var(--text-muted)]">CAC</div></div>
-                <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-base font-bold text-white">{c.roas ? `${c.roas}x` : '—'}</div><div className="text-[10px] text-[var(--text-muted)]">ROAS</div></div>
+                <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-base font-bold text-white">{money(c.daily_budget, 'INR', 0)}</div><div className="text-[10px] text-[var(--text-muted)]">per day</div></div>
+                <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-base font-bold text-white">{c.cac ? money(c.cac, 'INR', 0) : '—'}</div><div className="text-[10px] text-[var(--text-muted)]">per customer</div></div>
+                <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-base font-bold text-white">{c.roas ? `${c.roas}x` : '—'}</div><div className="text-[10px] text-[var(--text-muted)]">return</div></div>
               </div>
               <div className="mt-3 grid grid-cols-4 gap-1 text-center text-[11px] text-[var(--text-muted)]">
                 <div><div className="num text-white">{num(c.impressions)}</div>impr</div><div><div className="num text-white">{c.ctr}%</div>CTR</div><div><div className="num text-white">{num(c.leads)}</div>leads</div><div><div className="num text-white">{num(c.meetings)}</div>meetings</div>
@@ -95,7 +95,7 @@ export function CampaignsPage() {
       )}
 
       {tab === 'buyer' && (
-        <Panel title="Autonomous Media Buyer · reallocation log" subtitle="Where should the next rupee go? Based on CAC, ROAS, LTV, margin, pipeline and real revenue.">
+        <Panel title="Budget the AI moved" subtitle="Every change, and the reason for it — based on real revenue, not clicks.">
           <div className="space-y-2">{allocs?.map((a) => (
             <div key={a.id} className="flex flex-wrap items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
               <div className="w-16 font-mono text-[11px] text-[var(--text-muted)]">{shortDate(a.date)}</div>

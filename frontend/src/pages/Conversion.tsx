@@ -14,8 +14,8 @@ export function ConversionPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phase 10 · Landing Page Agent → CRO Agent" title={<>Ad → Page → Offer → CTA, <span className="gradient-text">kept coherent</span></>}
-        description="A channel-matched page for every campaign: LinkedIn → enterprise, Google → high intent, Meta → education. The CRO Agent experiments on headline, CTA, form, proof and structure continuously." />
+      <PageHeader title={<>Landing <span className="gradient-text">pages</span></>}
+        description="A page built to match each ad, so what you promise in the ad is what people see when they click. The AI keeps testing headlines and forms to get more sign-ups." />
       <div className="grid gap-4 md:grid-cols-2">
         {pages?.map((p, i) => (
           <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass overflow-hidden">
@@ -36,11 +36,11 @@ export function ConversionPage() {
               <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                 <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-lg font-bold text-white">{num(p.visitors)}</div><div className="text-[10px] text-[var(--text-muted)]">visitors</div></div>
                 <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-lg font-bold text-white">{num(p.conversions)}</div><div className="text-[10px] text-[var(--text-muted)]">conversions</div></div>
-                <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-lg font-bold text-emerald-300">{p.conversion_rate}%</div><div className="text-[10px] text-[var(--text-muted)]">CVR</div></div>
+                <div className="rounded-xl bg-white/[0.03] p-2"><div className="text-lg font-bold text-emerald-300">{p.conversion_rate}%</div><div className="text-[10px] text-[var(--text-muted)]">sign-up rate</div></div>
               </div>
               {p.active_experiment && (
                 <div className="mt-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                  <div className="flex items-center gap-2 text-[11px]"><FlaskConical className="h-3.5 w-3.5 text-accent-soft" /><span className="font-semibold text-white">CRO experiment:</span><span className="text-[var(--text-secondary)]">{p.active_experiment}</span></div>
+                  <div className="flex items-center gap-2 text-[11px]"><FlaskConical className="h-3.5 w-3.5 text-accent-soft" /><span className="font-semibold text-white">Currently testing:</span><span className="text-[var(--text-secondary)]">{p.active_experiment}</span></div>
                   {p.variants.length > 0 && <div className="mt-2 space-y-1.5">{p.variants.map((v) => <div key={v.label}><div className="flex justify-between text-[11px]"><span className="text-[var(--text-secondary)]"><b className="text-white">{v.label}</b> · {v.headline}</span><span className="num text-white">{v.cr}%</span></div><Meter value={v.cr} max={Math.max(...p.variants.map((x) => x.cr)) * 1.2} height={4} color={v.cr === Math.max(...p.variants.map((x) => x.cr)) ? 'var(--status-good)' : 'var(--series-1)'} /></div>)}</div>}
                 </div>
               )}

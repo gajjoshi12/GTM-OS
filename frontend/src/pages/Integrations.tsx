@@ -27,8 +27,8 @@ export function IntegrationsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Connector framework · provider-agnostic by design" title={<>{data?.summary.connected ?? 0} of {data?.summary.total ?? 0} providers <span className="gradient-text">connected</span></>}
-        description="No single vendor is load-bearing. Each capability sits behind an internal interface with multiple adapters and waterfall fallback. Blank keys run in simulation; paste keys here (encrypted at rest) or set them in .env." />
+      <PageHeader title={<>{data?.summary.connected ?? 0} of {data?.summary.total ?? 0} tools <span className="gradient-text">connected</span></>}
+        description="Connect the tools you already pay for. Anything you do not connect keeps running on realistic sample data, so nothing breaks — add them one at a time as you go." />
 
       <div className="flex flex-wrap gap-2">
         <Tabs tabs={[{ key: 'all', label: 'All', count: data?.providers.length }, ...(data?.categories.map((c) => ({ key: c.key, label: c.label, count: data.providers.filter((p) => p.category === c.key).length })) ?? [])]} value={cat} onChange={setCat} />

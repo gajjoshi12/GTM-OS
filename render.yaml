@@ -1,0 +1,126 @@
+# =====================================================================
+#  AI GTM OS - Render Blueprint
+#  Render Dashboard -> New -> Blueprint -> pick this repo.
+#
+#  IMPORTANT: service names are globally unique on Render and they decide
+#  your URLs (<name>.onrender.com). If a name is taken, rename it here AND
+#  update the three URL env vars marked  # <-- URL  below.
+#
+#  Free-tier deploy: delete the `gtm-worker` service and the `gtm-redis`
+#  service (background workers and Key Value need a paid plan). With no
+#  REDIS_URL the backend runs agent jobs inline, which already works.
+# =====================================================================
+
+databases:
+  - name: gtm-db
+    databaseName: gtm
+    user: gtm
+    plan: free            # free expires after 30 days -> use `basic-256mb` for anything real
+
+services:
+  # ---------------------------------------------------------------- API
+  - type: web
+    name: gtm-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput &&
+      python manage.py migrate --noinput &&
+      python manage.py seed_demo
+    # --timeout 120: LLM calls run inline when there is no Celery worker
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+    healthCheckPath: /api/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true          # Render generates a strong secret
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gtm-db
+          property: connectionString
+      - key: REDIS_URL               # delete this block on the free tier
+        fromService:
+          type: keyvalue
+          name: gtm-redis
+          property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://gtm-web.onrender.com          # <-- URL (frontend)
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://gtm-web.onrender.com          # <-- URL (frontend)
+      - key: PUBLIC_APP_URL
+        value: https://gtm-web.onrender.com          # <-- URL (frontend)
+      - key: PUBLIC_API_URL
+        value: https://gtm-api.onrender.com          # <-- URL (this service)
+      # Set these in the dashboard (marked sync:false = never stored in git)
+      - key: CREDENTIALS_ENCRYPTION_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+
+  # ------------------------------------------------------- Celery worker
+  # Paid plans only. Delete this whole service for a free deploy.
+  - type: worker
+    name: gtm-worker
+    runtime: python
+    plan: starter
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A config worker -l info --concurrency 2
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_SECRET_KEY
+        fromService:
+          type: web
+          name: gtm-api
+          envVarKey: DJANGO_SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gtm-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: gtm-redis
+          property: connectionString
+      - key: CREDENTIALS_ENCRYPTION_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+
+  # --------------------------------------------------------------- Redis
+  # Paid plans only. Delete for a free deploy (agents then run inline).
+  - type: keyvalue
+    name: gtm-redis
+    plan: starter
+    ipAllowList: []        # empty = private network only
+
+  # ------------------------------------------------------------ Frontend
+  - type: web
+    name: gtm-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_URL
+        value: https://gtm-api.onrender.com/api      # <-- URL (api + /api)
+      - key: VITE_APP_NAME
+        value: AI GTM OS
+    routes:
+      - type: rewrite      # SPA: let react-router handle deep links
+        source: /*
+        destination: /index.html
