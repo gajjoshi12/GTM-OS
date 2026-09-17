@@ -21,6 +21,15 @@ ROOT_DIR = BASE_DIR.parent
 load_dotenv(ROOT_DIR / ".env")
 load_dotenv(BASE_DIR / ".env", override=True)
 
+# `.env` documents "leave it blank and it is not configured", but several libraries
+# test for the variable's PRESENCE rather than its truthiness and happily accept an
+# empty string as a real value:
+#   * dj-database-url  -> blank DATABASE_URL returns {} instead of the SQLite default
+#   * groq / openai    -> blank *_BASE_URL becomes the base URL, so every call 404s
+# Dropping empty vars makes "blank" genuinely mean "unset" everywhere.
+for _key in [k for k, v in os.environ.items() if v == ""]:
+    del os.environ[_key]
+
 
 def env(key: str, default: str = "") -> str:
     return os.environ.get(key, default)
@@ -102,6 +111,10 @@ DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
+        # Serverless Postgres (Neon, Supabase) suspends idle compute and drops the
+        # socket. Without this, the first request after a sleep dies on a stale
+        # persistent connection instead of transparently reconnecting.
+        conn_health_checks=True,
     )
 }
 

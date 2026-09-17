@@ -11,12 +11,6 @@
 #  inline on the request, which is why gunicorn gets --timeout 120.
 # =====================================================================
 
-databases:
-  - name: gtm-db
-    databaseName: gtm
-    user: gtm
-    plan: free          # NOTE: Render deletes free Postgres after 30 days (see README)
-
 services:
   # ---------------------------------------------------------------- API
   - type: web
@@ -40,16 +34,14 @@ services:
         value: "false"
       - key: DJANGO_SECRET_KEY
         generateValue: true          # Render generates a strong secret for you
-      - key: DATABASE_URL
-        fromDatabase:
-          name: gtm-db
-          property: connectionString
+      - key: DATABASE_URL          # paste the Neon DIRECT connection string (no -pooler)
+        sync: false
       - key: CORS_ALLOWED_ORIGINS
-        value: https://gtm-web.onrender.com          # <-- URL (frontend)
+        value: https://gtm-web-h92b.onrender.com          # <-- URL (frontend)
       - key: CSRF_TRUSTED_ORIGINS
-        value: https://gtm-web.onrender.com          # <-- URL (frontend)
+        value: https://gtm-web-h92b.onrender.com          # <-- URL (frontend)
       - key: PUBLIC_APP_URL
-        value: https://gtm-web.onrender.com          # <-- URL (frontend)
+        value: https://gtm-web-h92b.onrender.com          # <-- URL (frontend)
       - key: PUBLIC_API_URL
         value: https://gtm-api.onrender.com          # <-- URL (this service)
       # Prompted for on first deploy; sync:false keeps them out of git.
@@ -80,6 +72,12 @@ services:
         value: https://gtm-api.onrender.com/api      # <-- URL (api + /api)
       - key: VITE_APP_NAME
         value: AI GTM OS
+      # Prefills the login form with the seed_demo account. Remove both
+      # if you ever put this in front of people who shouldn't have it.
+      - key: VITE_DEMO_EMAIL
+        value: founder@demo.gtm
+      - key: VITE_DEMO_PASSWORD
+        value: demo12345
     routes:
       - type: rewrite      # SPA: let react-router handle deep links
         source: /*

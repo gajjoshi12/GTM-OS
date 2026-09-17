@@ -82,9 +82,13 @@ class GroqProvider(BaseProvider):
                 # Groq's free tier has tight RPM/TPM limits; the SDK backs off for us.
                 "max_retries": settings.GROQ_MAX_RETRIES,
                 "timeout": settings.GROQ_TIMEOUT,
+                # ALWAYS pass an explicit base_url. The SDK falls back to the
+                # GROQ_BASE_URL env var and only guards with `is None`, so the
+                # empty string python-dotenv exports for a blank key would be
+                # taken as the base URL and every request would fail with
+                # "Request URL is missing an 'http://' or 'https://' protocol".
+                "base_url": settings.GROQ_BASE_URL or "https://api.groq.com",
             }
-            if settings.GROQ_BASE_URL:
-                kwargs["base_url"] = settings.GROQ_BASE_URL
             self._client = groq.Groq(**kwargs)
         return self._client
 
@@ -193,9 +197,11 @@ class OpenAIProvider(BaseProvider):
         if self._client is None:
             import openai
 
-            kwargs: dict[str, Any] = {"api_key": self.api_key}
-            if settings.OPENAI_BASE_URL:
-                kwargs["base_url"] = settings.OPENAI_BASE_URL
+            # Same empty-string-from-dotenv trap as Groq: pass an explicit URL.
+            kwargs: dict[str, Any] = {
+                "api_key": self.api_key,
+                "base_url": settings.OPENAI_BASE_URL or "https://api.openai.com/v1",
+            }
             self._client = openai.OpenAI(**kwargs)
         return self._client
 
