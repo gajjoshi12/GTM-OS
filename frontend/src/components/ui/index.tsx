@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react'
 import { ArrowDownRight, ArrowUpRight, ChevronDown, HelpCircle, Info, Loader2 } from 'lucide-react'
 import { signedPct } from '@/lib/format'
@@ -9,8 +9,9 @@ import { signedPct } from '@/lib/format'
 export function Panel({ className, children, title, subtitle, action, padded = true, ...rest }: Omit<HTMLAttributes<HTMLDivElement>, 'title'> & {
   title?: ReactNode; subtitle?: ReactNode; action?: ReactNode; padded?: boolean
 }) {
+  const spot = useSpot()
   return (
-    <div className={clsx('glass', padded && 'p-5', className)} {...rest}>
+    <div ref={spot.ref} onMouseMove={spot.onMouseMove} className={clsx('glass spot', padded && 'p-5', className)} {...rest}>
       {(title || action) && (
         <div className={clsx('mb-4 flex items-start justify-between gap-3', !padded && 'px-5 pt-5')}>
           <div>
@@ -80,21 +81,25 @@ export const statusTone = (s: string): Tone => {
 }
 
 /* ---------------------------------------------------------------- StatTile */
-export function StatTile({ label, value, delta, hint, upIsGood = true, accent, spark, className, explain, big }: {
-  label: string; value: ReactNode; delta?: number | null; hint?: string; upIsGood?: boolean; accent?: string
+export function StatTile({ label, value, delta, hint, upIsGood = true, accent, spark, className, explain, big, count, fmt }: {
+  label: string; value?: ReactNode; delta?: number | null; hint?: string; upIsGood?: boolean; accent?: string
   spark?: number[]; className?: string; explain?: string; big?: boolean
+  /** Give a raw number + formatter and the tile counts up instead of rendering `value`. */
+  count?: number; fmt?: (n: number) => string
 }) {
   const d = delta ?? null
   const good = d == null ? null : upIsGood ? d >= 0 : d <= 0
+  const spot = useSpot()
+  const shown = count != null ? <CountUp value={count} format={fmt} /> : value
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={clsx('glass p-4', className)}>
+    <motion.div ref={spot.ref} onMouseMove={spot.onMouseMove} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={clsx('glass spot p-4', className)}>
       <div className="flex items-start justify-between">
         <span className="label flex items-center gap-1.5">{label}<Explain text={explain} /></span>
         {accent && <span className="h-2 w-2 rounded-full" style={{ background: accent }} />}
       </div>
       <div className="mt-2 flex items-end justify-between gap-3">
         <div>
-          <div className={clsx('whitespace-nowrap font-bold tracking-tight text-white', big ? 'text-[26px] xl:text-3xl' : 'text-xl xl:text-[22px]')}>{value}</div>
+          <div className={clsx('whitespace-nowrap font-bold tracking-tight text-white', big ? 'text-[26px] xl:text-3xl' : 'text-xl xl:text-[22px]')}>{shown}</div>
           {(d != null || hint) && (
             <div className="mt-1 flex items-center gap-2 text-xs">
               {d != null && (
@@ -263,6 +268,79 @@ export function Disclosure({ label, children, count }: { label: string; children
         {open ? 'Hide' : label}{count != null && !open && <span className="text-[var(--text-muted)]">({count})</span>}
       </button>
       {open && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3 overflow-hidden">{children}</motion.div>}
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------- CountUp
+ * Animates a number from its previous value to the new one. Honors
+ * prefers-reduced-motion by jumping straight to the target.
+ */
+export function CountUp({ value, format = (n) => Math.round(n).toLocaleString(), duration = 1400, className }: {
+  value: number; format?: (n: number) => string; duration?: number; className?: string
+}) {
+  const [shown, setShown] = useState(0)
+  const prev = useRef(0)
+  useEffect(() => {
+    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const from = prev.current, to = Number(value) || 0
+    if (reduce || from === to) { setShown(to); prev.current = to; return }
+    const start = performance.now()
+    let raf = 0
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / duration)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setShown(from + (to - from) * eased)
+      if (p < 1) raf = requestAnimationFrame(tick)
+      else prev.current = to
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration])
+  return <span className={className}>{format(shown)}</span>
+}
+
+/* ---------------------------------------------------------------- Spotlight
+ * Cursor-following glow. Attach the returned props to any element with the
+ * `spot` class; the CSS does the rest.
+ */
+export function useSpot<T extends HTMLElement = HTMLDivElement>() {
+  const ref = useRef<T>(null)
+  const onMouseMove = (e: React.MouseEvent<T>) => {
+    const el = ref.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    el.style.setProperty('--mx', `${e.clientX - r.left}px`)
+    el.style.setProperty('--my', `${e.clientY - r.top}px`)
+  }
+  return { ref, onMouseMove }
+}
+
+/* ---------------------------------------------------------------- Ring
+ * Circular progress with a gradient stroke, animated on mount / change.
+ */
+export function Ring({ value, max = 100, size = 168, stroke = 12, children, className }: {
+  value: number; max?: number; size?: number; stroke?: number; children?: ReactNode; className?: string
+}) {
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const p = Math.max(0, Math.min(1, value / (max || 1)))
+  const id = useRef(`ring-${Math.random().toString(36).slice(2, 8)}`).current
+  return (
+    <div className={clsx('relative shrink-0', className)} style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#7c6cff" /><stop offset="100%" stopColor="#22d3ee" />
+          </linearGradient>
+        </defs>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
+        <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={`url(#${id})`} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c * (1 - p) }}
+          transition={{ duration: 1.6, ease: [0.2, 0.8, 0.2, 1] }}
+          style={{ filter: 'drop-shadow(0 0 10px rgba(124,108,255,0.55))' }} />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>
     </div>
   )
 }

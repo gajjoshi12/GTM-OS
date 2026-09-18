@@ -36,20 +36,20 @@ export function AnalyticsPage() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {ri ? <>
-          <StatTile big label="Money made" value={money(ri.revenue, cur)} accent="var(--series-1)" explain={explainOf('revenue')} />
-          <StatTile big label="Cost per customer" value={money(ri.cac, cur, 0)} accent="var(--series-4)" explain={explainOf('cac')} />
-          <StatTile big label="Customer value" value={money(ri.ltv, cur)} accent="var(--series-3)" explain={explainOf('ltv')} />
-          <StatTile big label="Value vs. cost" value={`${ri.ltv_to_cac}x`} hint={ri.ltv_to_cac >= 3 ? 'healthy' : 'below 3x — watch this'} accent="var(--series-3)" explain={explainOf('ltv_to_cac')} />
+          <StatTile big label="Money made" count={ri.revenue} fmt={(n) => money(n, cur)} accent="var(--series-1)" explain={explainOf('revenue')} />
+          <StatTile big label="Cost per customer" count={ri.cac} fmt={(n) => money(n, cur, 0)} accent="var(--series-4)" explain={explainOf('cac')} />
+          <StatTile big label="Customer value" count={ri.ltv} fmt={(n) => money(n, cur)} accent="var(--series-3)" explain={explainOf('ltv')} />
+          <StatTile big label="Value vs. cost" count={ri.ltv_to_cac} fmt={(n) => `${n.toFixed(1)}x`} hint={ri.ltv_to_cac >= 3 ? 'healthy' : 'below 3x — watch this'} accent="var(--series-3)" explain={explainOf('ltv_to_cac')} />
         </> : Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
       </div>
 
       {ri && (
         <Disclosure label="Show more numbers">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatTile label="Deals in progress" value={money(ri.pipeline, cur)} accent="var(--series-6)" explain={explainOf('pipeline')} />
-            <StatTile label="Break even in" value={`${ri.payback_months} mo`} accent="var(--series-2)" explain={explainOf('payback_months')} />
-            <StatTile label="Gross margin" value={pct(ri.gross_margin_pct, 0)} accent="var(--series-5)" explain={explainOf('gross_margin_pct')} />
-            <StatTile label="Marketing return" value={pct(ri.roi_pct, 0)} accent="var(--series-7)" explain={explainOf('roi_pct')} />
+            <StatTile label="Deals in progress" count={ri.pipeline} fmt={(n) => money(n, cur)} accent="var(--series-6)" explain={explainOf('pipeline')} />
+            <StatTile label="Break even in" count={ri.payback_months} fmt={(n) => `${n.toFixed(1)} mo`} accent="var(--series-2)" explain={explainOf('payback_months')} />
+            <StatTile label="Gross margin" count={ri.gross_margin_pct} fmt={(n) => pct(n, 0)} accent="var(--series-5)" explain={explainOf('gross_margin_pct')} />
+            <StatTile label="Marketing return" count={ri.roi_pct} fmt={(n) => pct(n, 0)} accent="var(--series-7)" explain={explainOf('roi_pct')} />
           </div>
         </Disclosure>
       )}

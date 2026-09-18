@@ -2,6 +2,7 @@ import { useEffect, type ReactElement } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from '@/store/auth'
 import { AppShell } from '@/components/layout/AppShell'
+import { LandingPage } from '@/pages/Landing'
 import { LoginPage } from '@/pages/Login'
 import { OnboardingPage } from '@/pages/Onboarding'
 import { CommandCentre } from '@/pages/CommandCentre'
@@ -21,7 +22,7 @@ function Protected({ children }: { children: ReactElement }) {
   const { user, loading } = useAuth()
   const loc = useLocation()
   if (loading) return <Splash />
-  if (!user) return <Navigate to="/login" state={{ from: loc }} replace />
+  if (!user) return <Navigate to="/landing" state={{ from: loc }} replace />
   if (!user.current_workspace?.onboarding_completed && loc.pathname !== '/onboarding') return <Navigate to="/onboarding" replace />
   return children
 }
@@ -43,6 +44,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/onboarding" element={<Protected><OnboardingPage /></Protected>} />
       <Route element={<Protected><AppShell /></Protected>}>

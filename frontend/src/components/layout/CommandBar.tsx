@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, Bot, CheckCircle2, Command as CommandIcon, Loader2, Sparkles, X } from 'lucide-react'
 import { get, post } from '@/lib/api'
 import { Badge } from '@/components/ui'
+import { PixelChip } from '@/components/pixel/PixelAvatar'
 
 type Run = { id: number; agent_key: string; agent_name: string; status: string; summary: string; duration_ms: number }
 type Command = { id: number; text: string; intent: string; response: string; runs: Run[]; plan: { assumptions?: string[]; expected_outcome?: string } }
@@ -101,7 +102,7 @@ export function CommandBar({ open, onClose }: { open: boolean; onClose: () => vo
                     {result.runs.map((r, i) => (
                       <motion.div key={r.id} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                         className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
-                        <CheckCircle2 className={r.status === 'succeeded' ? 'mt-0.5 h-4 w-4 text-emerald-400' : 'mt-0.5 h-4 w-4 text-rose-400'} />
+                        <PixelChip seed={r.agent_key} size={30} />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs font-semibold text-white">{r.agent_name}</span>

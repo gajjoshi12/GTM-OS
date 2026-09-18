@@ -53,9 +53,9 @@ services:
         sync: false
       # Free Groq keys are rate-limited; keep the cheap worker model for bulk work.
       - key: GROQ_MODEL
-        value: llama-3.3-70b-versatile
+        value: openai/gpt-oss-120b
       - key: GROQ_WORKER_MODEL
-        value: llama-3.1-8b-instant
+        value: openai/gpt-oss-20b
 
   # ------------------------------------------------------------ Frontend
   # Static sites are free on Render and never spin down.

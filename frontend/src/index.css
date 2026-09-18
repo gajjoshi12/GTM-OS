@@ -71,3 +71,101 @@ body {
 .recharts-cartesian-grid line { stroke: var(--grid); }
 .recharts-text { fill: var(--text-muted); font-size: 11px; }
 .recharts-tooltip-cursor { fill: rgba(255,255,255,0.04) !important; }
+
+/* =========================================================================
+   Depth & motion layer
+   ========================================================================= */
+
+/* Cursor-following spotlight on any card. JS sets --mx / --my (see useSpot). */
+.spot { position: relative; isolation: isolate; transition: border-color .3s ease, transform .3s ease, box-shadow .3s ease; }
+.spot::after {
+  content: '';
+  /* z-index -1 keeps the glow behind the card's content without forcing every
+     child to position:relative — which would clobber absolutely-positioned
+     children (hover panels, badges) and break their layout. `isolation: isolate`
+     on .spot keeps the -1 inside this card's own stacking context. */
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(124,108,255,0.16), rgba(34,211,238,0.06) 35%, transparent 60%);
+  opacity: 0; transition: opacity .35s ease;
+}
+.spot:hover::after { opacity: 1; }
+.spot:hover { border-color: rgba(124,108,255,0.32); box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 30px 80px -40px rgba(124,108,255,0.45); }
+
+/* Hero surface: brighter glass with an internal glow */
+.glass-hero {
+  @apply relative overflow-hidden rounded-3xl border border-white/10 shadow-glass backdrop-blur-2xl;
+  background:
+    radial-gradient(900px 400px at 0% 0%, rgba(124,108,255,0.22), transparent 55%),
+    radial-gradient(700px 400px at 100% 100%, rgba(34,211,238,0.14), transparent 55%),
+    rgba(255,255,255,0.03);
+}
+.glass-hero::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 35%);
+}
+
+/* Animated gradient ring border for the "live" hero moments */
+@keyframes borderSpin { to { --angle: 360deg; } }
+@property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+.ring-live {
+  position: relative;
+}
+.ring-live::before {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: conic-gradient(from var(--angle), rgba(124,108,255,0), rgba(124,108,255,0.9), rgba(34,211,238,0.9), rgba(124,108,255,0));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: borderSpin 6s linear infinite;
+}
+
+/* Flowing connector between loop stages */
+@keyframes flow { to { stroke-dashoffset: -28; } }
+.flow-line { stroke-dasharray: 6 8; animation: flow 1.4s linear infinite; }
+
+/* Travelling pulse dot along the loop */
+@keyframes travel { 0% { offset-distance: 0%; opacity: 0 } 8% { opacity: 1 } 92% { opacity: 1 } 100% { offset-distance: 100%; opacity: 0 } }
+
+/* Slow orbital rotations for the agent constellation */
+@keyframes orbitCW  { from { transform: rotate(0deg) }   to { transform: rotate(360deg) } }
+@keyframes orbitCCW { from { transform: rotate(360deg) } to { transform: rotate(0deg) } }
+/* transform-origin is set inline in px (the SVG centre); keep the default view-box
+   reference so those px mean "SVG user units", not "this group's own bounding box". */
+.orbit-ring { transform-box: view-box; }
+.orbit-ring:hover, .orbit-paused .orbit-ring { animation-play-state: paused !important; }
+
+/* Soft breathing glow for the CMO core */
+@keyframes breathe { 0%,100% { filter: drop-shadow(0 0 12px rgba(124,108,255,0.55)) } 50% { filter: drop-shadow(0 0 28px rgba(34,211,238,0.75)) } }
+.breathe { animation: breathe 3.2s ease-in-out infinite; }
+
+/* Big display numbers */
+.display-num { font-weight: 800; letter-spacing: -0.03em; line-height: 0.95; font-variant-numeric: proportional-nums; }
+
+/* Ambient background layer behind every page */
+.ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.ambient .grid {
+  position: absolute; inset: -10%;
+  background-image: linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 10%, transparent 70%);
+  animation: gridDrift 40s linear infinite;
+}
+@keyframes gridDrift { from { transform: translate(0,0) } to { transform: translate(56px, 56px) } }
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-line, .orbit-ring, .breathe, .ambient .grid, .ring-live::before, .animate-aurora, .animate-pulseRing { animation: none !important; }
+}
+
+/* ---------------------------------------------------------------- pixel agents */
+@keyframes pixBob  { 0%, 100% { transform: translateY(0) }      50% { transform: translateY(-4%) } }
+@keyframes pixWork { 0%, 100% { transform: translateY(0) }      50% { transform: translateY(-2%) } }
+@keyframes pixSpark {
+  0%   { opacity: 0; transform: translate(0, 0) scale(.5) }
+  25%  { opacity: 1 }
+  100% { opacity: 0; transform: translate(var(--dx, 0px), -16px) scale(1) }
+}
+/* Keep pixel art crisp wherever it is rendered. */
+img[src^="data:image/png"] { image-rendering: pixelated; }
+
+@media (prefers-reduced-motion: reduce) {
+  [class*='animate-[pixBob'], [class*='animate-[pixWork'], [class*='animate-[pixSpark'] { animation: none !important; }
+}

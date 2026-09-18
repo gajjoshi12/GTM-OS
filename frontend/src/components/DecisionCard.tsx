@@ -5,6 +5,7 @@ import { AlertTriangle, Check, Lightbulb, MessageCircleQuestion, ShieldCheck, Sp
 import { Badge, Button, Disclosure, statusTone } from '@/components/ui'
 import { post } from '@/lib/api'
 import { relTime, title } from '@/lib/format'
+import { PixelChip } from '@/components/pixel/PixelAvatar'
 
 export type Decision = {
   id: number; agent_name: string; agent_key: string; title: string; body: string; category: string; impact: string; confidence: number
@@ -54,8 +55,11 @@ export function DecisionCard({ d, compact }: { d: Decision; compact?: boolean })
       {important && <span className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-accent to-accent-cyan" />}
 
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-accent-soft">
-          <Icon className="h-4 w-4" />
+        <div className="relative mt-0.5 shrink-0">
+          <PixelChip seed={d.agent_key || 'cmo'} size={38} />
+          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-ink-900 ring-1 ring-white/10 text-accent-soft">
+            <Icon className="h-2.5 w-2.5" />
+          </span>
         </div>
 
         <div className="min-w-0 flex-1">

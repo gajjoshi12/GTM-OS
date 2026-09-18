@@ -11,8 +11,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.agents import orchestrator
-from apps.agents.models import Decision
+from apps.agents.models import Agent, Decision
+from apps.campaigns.models import Campaign, ContentItem
 from apps.core.workspace import WorkspaceScopedMixin, get_workspace
+from apps.knowledge.models import KnowledgeEntity
 from apps.leads.models import Company, Contact
 from apps.outbound.models import Reply, Sequence
 
@@ -105,10 +107,16 @@ class DashboardView(APIView):
             "counts": {
                 "pending_decisions": Decision.objects.filter(workspace=ws, status=Decision.Status.PENDING).count(),
                 "tier1_accounts": Company.objects.filter(workspace=ws, tier=1).count(),
+                "companies_total": Company.objects.filter(workspace=ws).count(),
+                "knowledge_entities": KnowledgeEntity.objects.filter(workspace=ws).count(),
                 "active_sequences": Sequence.objects.filter(workspace=ws, status=Sequence.Status.ACTIVE).count(),
+                "active_campaigns": Campaign.objects.filter(workspace=ws, status=Campaign.Status.ACTIVE).count(),
+                "content_scheduled": ContentItem.objects.filter(workspace=ws, status=ContentItem.Status.SCHEDULED).count(),
                 "unhandled_replies": Reply.objects.filter(workspace=ws, handled=False).count(),
                 "running_experiments": Experiment.objects.filter(workspace=ws, status=Experiment.Status.RUNNING).count(),
                 "memory_insights": MemoryInsight.objects.filter(workspace=ws, active=True).count(),
+                "agents_running": Agent.objects.filter(workspace=ws, status=Agent.Status.RUNNING).count(),
+                "agents_total": Agent.objects.filter(workspace=ws).count(),
             },
         })
 
